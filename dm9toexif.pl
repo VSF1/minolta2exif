@@ -8,7 +8,6 @@
 # 
 # (C) 2020-2021 Vitor Fonseca
 # Released under GNU General Public License v3
-#
 # http://www.vitorfonseca.com
 # 
 # Parses DNO*.txt from DM-9 data-back and generates EXIF for scanned jpegs.
@@ -104,8 +103,7 @@ for $dno (@ARGV){
 		if($dno =~ /(\d+)/){
 			$roll=$1;
 			$pattern =~ s/\@R/$roll/ge;
-		}
-		else{
+		} else {
 			warn "Roll number (\@R) specified in filename pattern but not parseable from $dno\n";
 		}
 	}
@@ -122,20 +120,20 @@ for $dno (@ARGV){
 
 	@fields=split("\t", $hdr);
 	@fields=trim(@fields);
-	if(!(@fields eq @hdr)){
+	if(!(@fields eq @hdr)) {
 		warn "bad header in $dno \n Fields @fields \n Header @hdr\n";
 		next;
 	}
 
 	# process all the frames listed in the file
-	for $frame (@dno){
+	for $frame (@dno) {
 		$frame =~ s/^\s+//;
 		$frame =~ s/\s+$//;
 		next if(length($frame) == 0);
 
 		@fields=split("\t", $frame);
 
-		if($#fields != $#hdr){
+		if($#fields != $#hdr) {
 			warn "bad frame line, wrong field count\n";
 			warn "$#fields - $#hdr -> $hdr\n";
 			next;
@@ -144,7 +142,7 @@ for $dno (@ARGV){
 		%exif=();
 
 		# turn values into a hash
-		for $i (0 .. $#hdr){
+		for $i (0 .. $#hdr) {
 			$fname=$hdr_field[ $i ];
 			$value=$fields[ $i ];
 			$exif{ $fname } = $value;
@@ -214,33 +212,29 @@ for $dno (@ARGV){
 		}
 
 		# focal length / max aperture
-		if($exif{'Lens'} =~ /^\s*(\d+)\ \ \/(\d+\.?\d*)\s*$/){
+		if($exif{'Lens'} =~ /^\s*(\d+)\ \ \/(\d+\.?\d*)\s*$/) {
 			$focal=$1;
 			$maxap=$2;
 
 			$exifTool->SetNewValue('FocalLength', $focal);
 			$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
 			$exifTool->SetNewValue('MaxApertureValue', $maxap);
-		} else { 
-			if($exif{'Lens'} =~ /^\s*(\d+)\ \/(\d+\.?\d*)\s*$/){
-				$focal=$1;
-				$maxap=$2;
+		} elsif($exif{'Lens'} =~ /^\s*(\d+)\ \/(\d+\.?\d*)\s*$/) {
+			$focal=$1;
+			$maxap=$2;
 
-				$exifTool->SetNewValue('FocalLength', $focal);
-				$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
-				$exifTool->SetNewValue('MaxApertureValue', $maxap);
-			} else {
-				if($exif{'Lens'} =~ /^\s*(\d+)\/(\d+\.?\d*)\s*$/){
-					$focal=$1;
-					$maxap=$2;
+			$exifTool->SetNewValue('FocalLength', $focal);
+			$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
+			$exifTool->SetNewValue('MaxApertureValue', $maxap);
+		} elsif($exif{'Lens'} =~ /^\s*(\d+)\/(\d+\.?\d*)\s*$/) {
+			$focal=$1;
+			$maxap=$2;
 
-					$exifTool->SetNewValue('FocalLength', $focal);
-					$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
-					$exifTool->SetNewValue('MaxApertureValue', $maxap);
-				} else {
-					warn "Bad lens format\n";
-				}
-			}
+			$exifTool->SetNewValue('FocalLength', $focal);
+			$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
+			$exifTool->SetNewValue('MaxApertureValue', $maxap);
+		} else {
+			warn "Bad lens format\n";
 		}
 		$exifTool->SetNewValue('ImageNumber', $exif{'Frame'});
 
@@ -266,13 +260,12 @@ for $dno (@ARGV){
 		# Date/Time
 		$datestr=$exif{'yy/mm/dd'} . ':' . $exif{'Time'};
 		#warn "date/time $datestr\n";
-		if($datestr =~ /^(\d\d)\/(\d\d)\/(\d\d):(\d+):(\d+)$/){
+		if($datestr =~ /^(\d\d)\/(\d\d)\/(\d\d):(\d+):(\d+)$/) {
 			$datestr="20${1}:${2}:${3} ${4}:${5}:00";
 
 			#warn "date/time $datestr\n";
 			$exifTool->SetNewValue('DateTimeOriginal', $datestr);
-		}
-		else{
+		} else {
 			warn "Bad date/time format\n";
 		}
 
@@ -293,18 +286,15 @@ for $dno (@ARGV){
 		$exifTool->SetNewValue("Artist", trim($artist_name)); 
 		$exifTool->SetNewValue("Copyright", trim($artist_name) . ", All rights reserved");	 
 
-
 		# write the EXIF to a new jpeg and to an XMP file
 		$exifTool->WriteInfo($fname, $outfile);
 		$exifTool->WriteInfo(undef, $xmpfile, 'XMP');
 	}
 }
 
-sub trim 
-{
+sub trim {
 	my @out = @_;
-	for (@out) 
-	{
+	for (@out) {
 		s/^\s+//;
 		s/\s+$//;
 	}
