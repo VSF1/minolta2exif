@@ -1,0 +1,1 @@
+# minolta2exif
