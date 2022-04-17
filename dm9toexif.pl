@@ -20,20 +20,22 @@ $script_version = "v2.1";
 ###################################
 # Start of user replaceable values
 ###################################
-$camera_maker =  "Minolta";
-$camera_model =	 "Dynax 9";	 # Replace by Dynax 9, Maxxum 9 or Alpha 9 depending on your model
+$camera_maker  = "Minolta";
+$camera_model  = "Dynax 9";	 # Replace by Dynax 9, Maxxum 9 or Alpha 9 depending on your model
 $camera_serial = "00000000"; 	 # Replace by your own serial
-$artist_name =   "John Doe";  # Replace by your own name
+$artist_name   = "";  # Replace by your own name
 ###################################
 # End of user replaceable values
 ################################### 
 
 sub Help {
-	print "$script_version\n";
+	print "dm9toexif.pl $script_version\n";
 	print "dm9toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
-	print "(C) 2008-2010 William Brodie-Tyrrell\n\n";
+	print "(C) 2008-2010 William Brodie-Tyrrell\n";
 	print "(C) 2020-2022 Vitor Fonseca\n\n";
+	
 	print "Usage: dm9toexif.pl pattern dn0-*.txt\n\n";
+	
 	print "jpegs/tiffs named according to pattern must exist in current directory, with the\n";
 	print "following substitutions into the pattern:\n";
 	print "\@F becomes frame number (from 00 to 99)\n";
@@ -85,8 +87,8 @@ if($#ARGV >= 0 && $ARGV[0] eq '-h' || $#ARGV < 1){
 
 $patternarg=shift(@ARGV);
 
-# discover jpegs in the current directory
-@jpegs=(<*.jpg>, <*.tif>);
+# discover images in the current directory
+@jpegs=(<*.jpg>, <*.tif>, <*.dng>);
 
 # iterate over all the given DNO files
 for $dno (@ARGV){
