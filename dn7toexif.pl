@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 #
-# dm9toexif.pl
+# dn7toexif.pl
 #
 # (C) 2008-2010 William Brodie-Tyrrell
 # Released under GNU General Public License v3
@@ -10,7 +10,7 @@
 # Released under GNU General Public License v3
 # http://www.vitorfonseca.com
 # 
-# Parses DNO*.txt from DM-9 data-back and generates EXIF for scanned jpegs.
+# Parses DN0*.txt from DS-100 data saver and generates EXIF for scanned jpegs.
 #
 
 use Image::ExifTool;
@@ -19,21 +19,21 @@ use Image::ExifTool::Minolta;
 $script_version = "v2.1";
 ###################################
 # Start of user replaceable values
-###################################
+################################### 
 $camera_maker =  "Minolta";
-$camera_model =	 "Dynax 9";	 # Replace by Dynax 9, Maxxum 9 or Alpha 9 depending on your model
+$camera_model =	"Dynax 7";	 	 # Replace by Dynax 7, Maxxum 7 or Alpha 7 depending on your model
 $camera_serial = "00000000"; 	 # Replace by your own serial
-$artist_name =   "John Doe";  # Replace by your own name
+$artist_name = "John Doe";  # Replace by your own name
 ###################################
 # End of user replaceable values
 ################################### 
 
 sub Help {
 	print "$script_version\n";
-	print "dm9toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
+	print "dn7toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
 	print "(C) 2008-2010 William Brodie-Tyrrell\n\n";
 	print "(C) 2020-2022 Vitor Fonseca\n\n";
-	print "Usage: dm9toexif.pl pattern dn0-*.txt\n\n";
+	print "Usage: dn7toexif.pl pattern dn0-*.txt\n\n";
 	print "jpegs/tiffs named according to pattern must exist in current directory, with the\n";
 	print "following substitutions into the pattern:\n";
 	print "\@F becomes frame number (from 00 to 99)\n";
@@ -44,40 +44,27 @@ sub Help {
 }
 
 sub FillPattern {
-	my($frame, $upno)=@_;
+	my($frame)=@_;
 	my($res);
 
 	$frame=sprintf("%02d", $frame);
-	$upno=sprintf("%05d", $upno);
 
 	$res=$pattern;
 
 	$res =~ s/\@F/$frame/ge;
-	$res =~ s/\@U/$upno/ge;
 
 	$res;
 }
 
-# expected header contents for DM-9
-@hdr=('Frame', 'Shutter', 'FNo.', 'Lens', '+/-', 'PASM', 'Meter', 'AF', 'Area', 'AFP/RP', 'Drive', 'Flash', 'FL +/-', 'FLMeter', 'ISO', 'Up No.', 'Fix No.', 'yy/mm/dd', 'Time');
-# Header to field name mapping 
-@hdr_field=('Frame', 'Shutter', 'FNo.', 'Lens', '+/-', 'PASM', 'Meter', 'AF', 'Area', 'AFP/RP', 'Drive', 'Flash', 'FL', 'FLMeter', 'ISO', 'Up No.', 'Fix No.', 'yy/mm/dd', 'Time');
+# expected header contents
+@hdr=('Frame', 'Shutter', 'FNo.', 'Lens', '+/-', 'PASM', 'Meter', 'FL +/-', 'yy/mm/dd', 'Time');
+@hdr_field=('Frame', 'Shutter', 'FNo.', 'Lens', '+/-', 'PASM', 'Meter', 'FL', 'yy/mm/dd', 'Time');
 
-# meter modes
+# meter modes (Meter field)
 %meters=('Multi', 'Multi-segment', 'Ave', 'Center-weighted average', 'Spot', 'Spot', 'OFF', 'Unknown');
-# exposure modes
-# %exposures=('P', 'Program Exposure', 'A', 'Aperture Priority', 'S', 'Shutter Priority', 'M', 'Manual Exposure');
+
+# exposure modes (PASM field)
 %exposures=('P','Program AE', 'A', 'Aperture-priority AE', 'S', 'Shutter speed priority AE', 'M', 'Manual');
-# AF modes
-#%afmodes=('A', 'AF-A', 'S', 'AF-S', 'C', 'AF-C', 'M', 'Manual');
-# AF areas
-#%afareas=('[ ]', 'Wide Focus Area', '-o-', 'Center Local Focus Area', 'o--', 'Left Local Focus Area', '--o', 'Right Local Focus Area', '---', 'Manual Focus');
-#%afareamode=('[ ]', 'Wide', '-o-', 'Local', 'o--', 'Local', '--o', 'Local', '---', 'Manual Focus');
-#%afpointselected=('[ ]', '(none)', '-o-', 'Center', 'o--', 'Left', '--o', 'Right', '---', '(none)');
-# release priorities
-#%afprp=('AFP', 'AF Priority', 'RP', 'Release Priority', '-', 'Manual Focus');
-# flash modes
-#%flashmodes=('OFF', 'Off', 'ON', 'On', 'RedEye', 'On, Red-eye reduction', 'Rear', 'On', 'WL', 'On');
 
 if($#ARGV >= 0 && $ARGV[0] eq '-h' || $#ARGV < 1){
 	Help;
@@ -90,7 +77,6 @@ $patternarg=shift(@ARGV);
 
 # iterate over all the given DNO files
 for $dno (@ARGV){
-	
 	open(DNO, $dno) || die "Can't open $dno: $!\n";
 	@dno=<DNO>;
 	close(DNO);
@@ -103,7 +89,8 @@ for $dno (@ARGV){
 		if($dno =~ /(\d+)/){
 			$roll=$1;
 			$pattern =~ s/\@R/$roll/ge;
-		} else {
+		}
+		else{
 			warn "Roll number (\@R) specified in filename pattern but not parseable from $dno\n";
 		}
 	}
@@ -120,20 +107,20 @@ for $dno (@ARGV){
 
 	@fields=split("\t", $hdr);
 	@fields=trim(@fields);
-	if(!(@fields eq @hdr)) {
+	if(!(@fields eq @hdr)){
 		warn "bad header in $dno \n Fields @fields \n Header @hdr\n";
 		next;
 	}
 
 	# process all the frames listed in the file
-	for $frame (@dno) {
+	for $frame (@dno){
 		$frame =~ s/^\s+//;
 		$frame =~ s/\s+$//;
 		next if(length($frame) == 0);
 
 		@fields=split("\t", $frame);
 
-		if($#fields != $#hdr) {
+		if($#fields != $#hdr){
 			warn "bad frame line, wrong field count\n";
 			warn "$#fields - $#hdr -> $hdr\n";
 			next;
@@ -142,25 +129,24 @@ for $dno (@ARGV){
 		%exif=();
 
 		# turn values into a hash
-		for $i (0 .. $#hdr) {
+		for $i (0 .. $#hdr){
 			$fname=$hdr_field[ $i ];
 			$value=$fields[ $i ];
 			$exif{ $fname } = $value;
 		}
 
 		# build pattern for searching for the matching jpeg,
-		# it is assumed to be of the form *upno.jpg
-		# $fpat='^.*('. $exif{'Up No.'} . ')\.jpg$';
-		$fpat=FillPattern($exif{'Frame'}, $exif{'Up No.'});
+		# it is assumed to be of the form pattern-*.jpg
+		$fpat=FillPattern($exif{'Frame'});
 
 		@matches=grep(/$fpat/, @jpegs);
 
 		if($#matches < $[){
-			warn "No match for ". $exif{'Up No.'} . ", skipping line\n";
+			warn "No match for, skipping frame number ". $exif{'Frame'} ."\n";
 			next;
 		}
 		if($#matches > $[){
-			warn "Multiple matches for ". $exif{'Up No.'} . ", skipping line\n";
+			warn "Multiple matches for ". $matches[0] . ", skipping frame ". $exif{'Frame'} ."\n";
 		}
 
 		# decide on filenames
@@ -168,7 +154,7 @@ for $dno (@ARGV){
 		$outfile = $fname;
 		$outfile =~ s/\.jpg$/-exif.jpg/;
 		$outfile =~ s/\.JPG$/-exif.JPG/;
-		$outfile =~ s/\.tif$/-exif.tif/;		
+		$outfile =~ s/\.tif$/-exif.tif/;
 		$outfile =~ s/\.TIF$/-exif.TIF/;
 		$outfile =~ s/\.dng$/-exif.dng/;
 		$outfile =~ s/\.DNG$/-exif.DNG/;
@@ -193,19 +179,15 @@ for $dno (@ARGV){
 			$value=$1+$2/(10^(length($2)));
 			$exifTool->SetNewValue('ShutterSpeedValue', $value);
 			$exifTool->SetNewValue('ExposureTime', $value);
-		}
-		elsif($shutter =~ /^\s*(\d+)\"\s*$/){
+		} elsif($shutter =~ /^\s*(\d+)\"\s*$/){
 			$exifTool->SetNewValue('ShutterSpeedValue', $1);
 			$exifTool->SetNewValue('ExposureTime', $1);
-		}
-		elsif($shutter =~ /^\s*(\d+)\s*$/){
+		} elsif($shutter =~ /^\s*(\d+)\s*$/){
 			$exifTool->SetNewValue('ShutterSpeedValue', 1.0/$1);
 			$exifTool->SetNewValue('ExposureTime', 1.0/$1);
-		}
-		elsif($shutter =~ /Bulb/i){
-			;
-		}
-		else{
+		} elsif($shutter =~ /Bulb/i){
+			# empty on purpose
+		} else {
 			warn "Bad shutter value '$shutter'\n";
 			next;
 		}
@@ -216,21 +198,21 @@ for $dno (@ARGV){
 		}
 
 		# focal length / max aperture
-		if($exif{'Lens'} =~ /^\s*(\d+)\ \ \/(\d+\.?\d*)\s*$/) {
+		if($exif{'Lens'} =~ /^\s*(\d+)\ \ \/(\d+\.?\d*)\s*$/){
 			$focal=$1;
 			$maxap=$2;
 
 			$exifTool->SetNewValue('FocalLength', $focal);
 			$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
 			$exifTool->SetNewValue('MaxApertureValue', $maxap);
-		} elsif($exif{'Lens'} =~ /^\s*(\d+)\ \/(\d+\.?\d*)\s*$/) {
+		} elsif($exif{'Lens'} =~ /^\s*(\d+)\ \/(\d+\.?\d*)\s*$/){
 			$focal=$1;
 			$maxap=$2;
 
 			$exifTool->SetNewValue('FocalLength', $focal);
 			$exifTool->SetNewValue('FocalLengthIn35mmFormat', $focal);
 			$exifTool->SetNewValue('MaxApertureValue', $maxap);
-		} elsif($exif{'Lens'} =~ /^\s*(\d+)\/(\d+\.?\d*)\s*$/) {
+		} elsif($exif{'Lens'} =~ /^\s*(\d+)\/(\d+\.?\d*)\s*$/){
 			$focal=$1;
 			$maxap=$2;
 
@@ -240,6 +222,8 @@ for $dno (@ARGV){
 		} else {
 			warn "Bad lens format\n";
 		}
+
+		# image number
 		$exifTool->SetNewValue('ImageNumber', $exif{'Frame'});
 
 		# exposure compensation
@@ -258,14 +242,15 @@ for $dno (@ARGV){
 		} else {
 			$exifTool->SetNewValue('Flash', 'No Flash'); # No Flash
 		}
+
 		# ISO
-		$exifTool->SetNewValue('ISO', trim($exif{'ISO'}));
+		$exifTool->SetNewValue('ISO', trim($iso));
 
 		# Date/Time
 		$datestr=$exif{'yy/mm/dd'} . ':' . $exif{'Time'};
-		#warn "date/time $datestr\n";
-		if($datestr =~ /^(\d\d)\/(\d\d)\/(\d\d):(\d+):(\d+)$/) {
-			$datestr="20${1}:${2}:${3} ${4}:${5}:00";
+		# warn "date/time $datestr\n";
+		if($datestr =~ /^(\d\d\d\d)\/(\d\d)\/(\d\d):(\d+):(\d+)$/){
+			$datestr="${1}:${2}:${3} ${4}:${5}:00";
 
 			#warn "date/time $datestr\n";
 			$exifTool->SetNewValue('DateTimeOriginal', $datestr);
@@ -273,12 +258,8 @@ for $dno (@ARGV){
 			warn "Bad date/time format\n";
 		}
 
-		# AF mode 
-		#$exifTool->SetNewValue("DriveMode", $afmodes{trim($exif{'AF'})});
-		#$exifTool->SetNewValue("Minolta:FocusMode", $afmodes{trim($exif{'AF'})});
+		# AF mode - ???
 		# AF area - ???
-		#$exifTool->SetNewValue("AFAreaMode", $afareamode{trim($exif{'Area'})});
-		#$exifTool->SetNewValue("Minolta:AFPoints", $afpointselected{trim($exif{'Area'})});
 		# few tags not sure how to set
 
 		# global assumed settings
@@ -296,9 +277,11 @@ for $dno (@ARGV){
 	}
 }
 
-sub trim {
+sub trim 
+{
 	my @out = @_;
-	for (@out) {
+	for (@out) 
+	{
 		s/^\s+//;
 		s/\s+$//;
 	}
