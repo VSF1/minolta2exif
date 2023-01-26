@@ -102,7 +102,7 @@ for $dno (@ARGV){
 	# pre-fill pattern with roll-number
 	$pattern=$patternarg;
 	if($pattern =~ /\@R/){
-		if($dno =~ /(\d+)/){
+		if($dno =~ /\-0*(\d+)/){
 			$roll=$1;
 			$pattern =~ s/\@R/$roll/ge;
 		} else {
