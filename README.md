@@ -7,4 +7,4 @@ jpegs/tiffs named according to pattern must exist in current directory, with the
 * print "\@U becomes Up-no (from 00000 to 99999)
 * @R becomes roll number from the DNO-filename (if found)
 
-This sctipt also generates .xmp files
+These scripts also generate .xmp files.
