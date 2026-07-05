@@ -1,9 +1,11 @@
 @ECHO OFF
 
-REM Command to install compiler
-REM perl -MCPAN -e "install PAR::Packer"
+ECHO Cleaning up old builds...
+IF EXIST build ( RMDIR /S /Q build )
+IF EXIST dist ( RMDIR /S /Q dist )
 
-ECHO compiling dm9toexif
-pp -o bin/dm9toexif.exe dm9toexif.pl | tee -a log/dm9toexif.log 2>&1
-ECHO compiling dn7toexif
-pp -o bin/dn7toexif.exe dn7toexif.pl | tee -a log/dn7toexif.log 2>&1
+ECHO Installing dependencies...
+pip install -r requirements.txt
+
+ECHO Compiling minolta2exif.py for Windows...
+pyinstaller minolta2exif.spec
