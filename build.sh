@@ -3,9 +3,6 @@
 echo "Cleaning up old builds..."
 rm -rf build/ dist/
 
-echo "Installing dependencies..."
-pip install -r requirements.txt
-
 echo "Compiling minolta2exif.py for Linux..."
 pyinstaller minolta2exif.spec
 
