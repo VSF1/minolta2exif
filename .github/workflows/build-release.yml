@@ -2,9 +2,9 @@ name: Build Application
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, ui ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, ui ]
 
 jobs:
   build-linux:
