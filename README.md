@@ -1,9 +1,29 @@
 # minolta2exif
 
-These set of scripts are used to add Minolta proprietary data into exif information and update the images.
+A tool to add Minolta proprietary data into exif information and update the images.
+
+The old versions of the scripts are no longer supported but still available at old/ folder.
 
 * dn7toexif.pl is to be used with the output from Minolta DS-100 acessory.
 * dm9toexif.pl is to be used with the output from Minolta DM-9 Data Memory Back acessory.
+
+## Installation
+
+### Linux
+
+Placeholder
+
+### Windows
+
+Placeholder
+
+### Mac
+
+Placeholder
+
+## Application usage
+
+## File name pattern
 
 jpegs/tiffs named according to pattern must exist in current directory, with the following substitutions into the pattern:
 * @F becomes frame number (from 00 to 99)
