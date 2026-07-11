@@ -3,12 +3,13 @@
 #
 # dn7toexif.pl
 #
-# (C) 2008-2010 William Brodie-Tyrrell
-# Released under GNU General Public License v3
-# 
 # (C) 2020-2021 Vitor Fonseca
 # Released under GNU General Public License v3
 # http://www.vitorfonseca.com
+#
+# (C) 2008-2010 William Brodie-Tyrrell
+# Released under GNU General Public License v3
+# https://www.brodie-tyrrell.org/
 # 
 # Parses DN0*.txt from DS-100 data saver and generates EXIF for scanned jpegs.
 #
@@ -20,20 +21,20 @@ $script_version = "v2.1";
 ###################################
 # Start of user replaceable values
 ################################### 
-$camera_maker  = "Minolta";
-$camera_model  = "Dynax 7";	 	 # Replace by Dynax 7, Maxxum 7 or Alpha 7 depending on your model
-$camera_serial = "00000000"; 	 # Replace by your own serial
-$artist_name   = "";  # Replace by your own name
+$camera_maker  = "Minolta";      # Replace with Minolta or Konica Minolta
+$camera_model  = "Dynax 7";	 	 # Replace with Dynax 7, Maxxum 7 or Alpha 7 depending on your model
+$camera_serial = "00000000"; 	 # Replace with your own serial
+$artist_name   = "";  			 # Replace with your own name
 ###################################
 # End of user replaceable values
 ################################### 
 
 sub Help {
-	print "dn7toexif.pl $script_version\n";
-	print "dn7toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
-	print "(C) 2008-2010 William Brodie-Tyrrell\n";
-	print "(C) 2020-2022 Vitor Fonseca\n\n";
+	print "dn7toexif.pl $script_version\n";	
+	print "(C) 2020-2022 Vitor Fonseca\n";
+	print "(C) 2008-2010 William Brodie-Tyrrell\n\n";
 	
+	print "dn7toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";	
 	print "Usage: dn7toexif.pl pattern dn0-*.txt\n\n";
 	
 	print "jpegs/tiffs named according to pattern must exist in current directory, with the\n";

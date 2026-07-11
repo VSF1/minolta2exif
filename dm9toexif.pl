@@ -3,12 +3,13 @@
 #
 # dm9toexif.pl
 #
-# (C) 2008-2010 William Brodie-Tyrrell
-# Released under GNU General Public License v3
-# 
 # (C) 2020-2021 Vitor Fonseca
 # Released under GNU General Public License v3
 # http://www.vitorfonseca.com
+#
+# (C) 2008-2010 William Brodie-Tyrrell
+# Released under GNU General Public License v3
+# https://www.brodie-tyrrell.org/
 # 
 # Parses DNO*.txt from DM-9 data-back and generates EXIF for scanned jpegs.
 #
@@ -21,19 +22,19 @@ $script_version = "v2.1";
 # Start of user replaceable values
 ###################################
 $camera_maker  = "Minolta";
-$camera_model  = "Dynax 9";	 # Replace by Dynax 9, Maxxum 9 or Alpha 9 depending on your model
-$camera_serial = "00000000"; 	 # Replace by your own serial
-$artist_name   = "";  # Replace by your own name
+$camera_model  = "Dynax 9";	 	 # Replace with Dynax 9, Maxxum 9 or Alpha 9 depending on your model
+$camera_serial = "00000000"; 	 # Replace with your own serial
+$artist_name   = "";  			 # Replace with your own name
 ###################################
 # End of user replaceable values
 ################################### 
 
 sub Help {
-	print "dm9toexif.pl $script_version\n";
-	print "dm9toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
-	print "(C) 2008-2010 William Brodie-Tyrrell\n";
-	print "(C) 2020-2022 Vitor Fonseca\n\n";
+	print "dm9toexif.pl $script_version\n";		
+	print "(C) 2020-2022 Vitor Fonseca\n";
+	print "(C) 2008-2010 William Brodie-Tyrrell\n\n";
 	
+	print "dm9toexif.pl: Converts DN0 files to EXIF data in scanned jpegs\n";
 	print "Usage: dm9toexif.pl pattern dn0-*.txt\n\n";
 	
 	print "jpegs/tiffs named according to pattern must exist in current directory, with the\n";
@@ -71,15 +72,17 @@ sub FillPattern {
 # %exposures=('P', 'Program Exposure', 'A', 'Aperture Priority', 'S', 'Shutter Priority', 'M', 'Manual Exposure');
 %exposures=('P','Program AE', 'A', 'Aperture-priority AE', 'S', 'Shutter speed priority AE', 'M', 'Manual');
 # AF modes
-#%afmodes=('A', 'AF-A', 'S', 'AF-S', 'C', 'AF-C', 'M', 'Manual');
+%afmodes=('A', 'AF-A', 'S', 'AF-S', 'C', 'AF-C', 'M', 'Manual');
 # AF areas
-#%afareas=('[ ]', 'Wide Focus Area', '-o-', 'Center Local Focus Area', 'o--', 'Left Local Focus Area', '--o', 'Right Local Focus Area', '---', 'Manual Focus');
-#%afareamode=('[ ]', 'Wide', '-o-', 'Local', 'o--', 'Local', '--o', 'Local', '---', 'Manual Focus');
-#%afpointselected=('[ ]', '(none)', '-o-', 'Center', 'o--', 'Left', '--o', 'Right', '---', '(none)');
+%afareas=('[ ]', 'Wide Focus Area', '-o-', 'Center Local Focus Area', 'o--', 'Left Local Focus Area', '--o', 'Right Local Focus Area', '---', 'Manual Focus');
+%afareamode=('[ ]', 'Wide', '-o-', 'Local', 'o--', 'Local', '--o', 'Local', '---', 'Manual Focus');
+%afpointselected=('[ ]', '(none)', '-o-', 'Center', 'o--', 'Left', '--o', 'Right', '---', '(none)');
 # release priorities
-#%afprp=('AFP', 'AF Priority', 'RP', 'Release Priority', '-', 'Manual Focus');
+%afprp=('AFP', 'AF Priority', 'RP', 'Release Priority', '-', 'Manual Focus');
 # flash modes
-#%flashmodes=('OFF', 'Off', 'ON', 'On', 'RedEye', 'On, Red-eye reduction', 'Rear', 'On', 'WL', 'On');
+%flashmodes=('OFF', 'Off', 'ON', 'On', 'RedEye', 'On, Red-eye reduction', 'Rear', 'On', 'WL', 'On');
+# Drive Mode -- not all values are currently mapped
+%drivemodes=('DR-S', 'Single', 'DR-C', 'Continuous');
 
 if($#ARGV >= 0 && $ARGV[0] eq '-h' || $#ARGV < 1){
 	Help;
@@ -188,7 +191,15 @@ for $dno (@ARGV){
 		warn "Modifying $fname into $outfile\n";
 
 		my $exifTool = new Image::ExifTool;
-
+#		$exifTool->Options(Group0 => ['MakerNotes']);
+		$exifTool->ExtractInfo("SRC.MRW", \%options);		
+		$info = $exifTool->GetInfo({Group0 => ['MakerNotes']});
+		# my $info = $exifTool->ImageInfo("SRC.MRW");
+		# my $maker_notes  = $info{"MakerNotes"};
+		
+		# warn "maker notes: '$info'";
+		$exifTool->SetNewValue('MakerNoteMinolta', $info);
+		
 		# set EXIF for shutter speed
 		$shutter=$exif{'Shutter'};
 		if($shutter =~ /^\s*(\d+)\"(\d+)\s*$/){
@@ -276,11 +287,11 @@ for $dno (@ARGV){
 		}
 
 		# AF mode 
-		#$exifTool->SetNewValue("DriveMode", $afmodes{trim($exif{'AF'})});
-		#$exifTool->SetNewValue("Minolta:FocusMode", $afmodes{trim($exif{'AF'})});
+		$exifTool->SetNewValue("Minolta:DriveMode", $drivemodes{trim($exif{'Drive'})});
+		$exifTool->SetNewValue("Minolta:FocusMode", $afmodes{trim($exif{'AF'})});
 		# AF area - ???
-		#$exifTool->SetNewValue("AFAreaMode", $afareamode{trim($exif{'Area'})});
-		#$exifTool->SetNewValue("Minolta:AFPoints", $afpointselected{trim($exif{'Area'})});
+		$exifTool->SetNewValue("AFAreaMode", $afareamode{trim($exif{'Area'})});
+		# $exifTool->SetNewValue("Minolta:AFPoints", $afpointselected{trim($exif{'Area'})});
 		# few tags not sure how to set
 
 		# global assumed settings
